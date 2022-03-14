@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-var validUrl = require('valid-url');
+const urlExists = require("url-exists");
 
 var bodyParser = require('body-parser')
 const express = require('express');
@@ -66,15 +66,18 @@ const findOneByIndex = (index, done) => {
 
 // Create shourturl post API
 app.route("/api/shorturl").post((req, res) => {
-  if (validUrl.isUri(req.body.url)) {
-    countDBSize((_, index) => {
-      createAndSaveLink(req.body.url, index + 1, (_, data) => {
-        res.json({ original_url: data.original_url, short_url: data.short_url })
+  urlExists(req.body.url, (err, exists) => {
+    if (exists) {
+      countDBSize((_, index) => {
+        createAndSaveLink(req.body.url, index + 1, (_, data) => {
+          res.json({ original_url: data.original_url, short_url: data.short_url })
+        });
       });
-    });
-  } else {
-    res.json({ error: 'invalid url' })
-  }
+    } else {
+      res.json({ error: 'invalid url' })
+    }
+  });
+
 });
 
 // Create short url API
